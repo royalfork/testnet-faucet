@@ -4,6 +4,7 @@ var http = require("http");
 var redis = require("redis");
 var Promise = require("promise");
 var bitcoin = require("bitcoin");
+var btcmath = require("bitcoin-math");
 
 // set constants
 var port = 3000;
@@ -46,7 +47,7 @@ function getMaxWithdrawal () {
       if (err) {
         reject(err);
       }
-      resolve(Math.floor(btc2sat(balance) * PERCENTAGE_OF_BAL));
+      resolve(Math.floor(balance.toSatoshi() * PERCENTAGE_OF_BAL));
     });
   })
   return promise;
@@ -72,14 +73,6 @@ function getSavedLimit (ip) {
   return promise;
 }
 
-function sat2btc (sat) {
-  return sat * Math.pow(10, -8);
-}
-
-function btc2sat (btc) {
-  return btc * Math.pow(10, 8); 
-}
-
 app.get('/limit', function(req, res) {
   getSavedLimit(req.ip).then(function(limit) {
     var resp = {
@@ -102,14 +95,15 @@ app.get('/limit', function(req, res) {
 
 app.post('/', function(req, res) {
   var addr = req.body.address;
-  var sat = req.body.amount;
+  var sat = parseInt(req.body.amount);
 
   // check IP limits
   getSavedLimit(req.ip).then(function(resp) {
     console.log("limit: " + resp + ", ask: " + sat);
     if (resp > sat) {
       // make transaction
-      btc_c.cmd("sendtoaddress", addr, sat2btc(sat), function(err, txid, headers) {
+      btc_c.cmd("sendtoaddress", addr, sat.toBitcoin(), function(err, txid, headers) {
+        console.log(txid);
         if (err) {
           return res.end(JSON.stringify({
             code: err.code,

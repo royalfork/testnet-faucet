@@ -9,6 +9,7 @@
     "body-parser": "*",
     "redis": "*",
     "promise": "*",
-    "bitcoin": "*"
+    "bitcoin": "*",
+    "bitcoin-math": "*"
   }
 }
