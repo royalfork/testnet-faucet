@@ -2,24 +2,100 @@
 1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'install' ]
 2 info using npm@1.4.28
 3 info using node@v0.10.32
-4 error install Couldn't read dependencies
-5 error Error: Invalid name: "Bitcoin Tesnet Faucet API"
-5 error     at ensureValidName (/usr/local/lib/node_modules/npm/node_modules/read-package-json/node_modules/normalize-package-data/lib/fixer.js:315:15)
-5 error     at Object.module.exports.fixNameField (/usr/local/lib/node_modules/npm/node_modules/read-package-json/node_modules/normalize-package-data/lib/fixer.js:204:5)
-5 error     at /usr/local/lib/node_modules/npm/node_modules/read-package-json/node_modules/normalize-package-data/lib/normalize.js:30:38
-5 error     at Array.forEach (native)
-5 error     at normalize (/usr/local/lib/node_modules/npm/node_modules/read-package-json/node_modules/normalize-package-data/lib/normalize.js:29:15)
-5 error     at final (/usr/local/lib/node_modules/npm/node_modules/read-package-json/read-json.js:342:33)
-5 error     at then (/usr/local/lib/node_modules/npm/node_modules/read-package-json/read-json.js:126:33)
-5 error     at /usr/local/lib/node_modules/npm/node_modules/read-package-json/read-json.js:328:57
-5 error     at evalmachine.<anonymous>:207:20
-5 error     at OpenReq.Req.done (/usr/local/lib/node_modules/npm/node_modules/graceful-fs/graceful-fs.js:141:5)
-6 error If you need help, you may report this *entire* log,
-6 error including the npm and node versions, at:
-6 error     <http://github.com/npm/npm/issues>
-7 error System Linux 3.13.0-24-generic
-8 error command "/usr/local/bin/node" "/usr/local/bin/npm" "install"
-9 error cwd /home/joe/faucet
-10 error node -v v0.10.32
-11 error npm -v 1.4.28
-12 verbose exit [ 1, true ]
+4 warn package.json bitcoin.faucet.api@0.0.1 No description
+5 warn package.json bitcoin.faucet.api@0.0.1 No repository field.
+6 warn package.json bitcoin.faucet.api@0.0.1 No README data
+7 verbose readDependencies using package.json deps
+8 verbose install where, deps [ '/home/joe/faucet', [ 'express', 'body-parser', 'redit' ] ]
+9 info preinstall bitcoin.faucet.api@0.0.1
+10 verbose readDependencies using package.json deps
+11 verbose already installed skipping express@* /home/joe/faucet
+12 verbose already installed skipping body-parser@* /home/joe/faucet
+13 verbose cache add [ 'redit@*', null ]
+14 verbose cache add name=undefined spec="redit@*" args=["redit@*",null]
+15 verbose parsed url { protocol: null,
+15 verbose parsed url   slashes: null,
+15 verbose parsed url   auth: null,
+15 verbose parsed url   host: null,
+15 verbose parsed url   port: null,
+15 verbose parsed url   hostname: null,
+15 verbose parsed url   hash: null,
+15 verbose parsed url   search: null,
+15 verbose parsed url   query: null,
+15 verbose parsed url   pathname: 'redit@*',
+15 verbose parsed url   path: 'redit@*',
+15 verbose parsed url   href: 'redit@*' }
+16 verbose cache add name="redit" spec="*" args=["redit","*"]
+17 verbose parsed url { protocol: null,
+17 verbose parsed url   slashes: null,
+17 verbose parsed url   auth: null,
+17 verbose parsed url   host: null,
+17 verbose parsed url   port: null,
+17 verbose parsed url   hostname: null,
+17 verbose parsed url   hash: null,
+17 verbose parsed url   search: null,
+17 verbose parsed url   query: null,
+17 verbose parsed url   pathname: '*',
+17 verbose parsed url   path: '*',
+17 verbose parsed url   href: '*' }
+18 verbose addNamed [ 'redit', '*' ]
+19 verbose addNamed [ null, '*' ]
+20 silly lockFile 393e89f8-redit redit@*
+21 verbose lock redit@* /home/joe/.npm/393e89f8-redit.lock
+22 silly addNameRange { name: 'redit', range: '*', hasData: false }
+23 verbose request where is /redit
+24 verbose request registry https://registry.npmjs.org/
+25 verbose request id e950dabdbf15a418
+26 verbose url raw /redit
+27 verbose url resolving [ 'https://registry.npmjs.org/', './redit' ]
+28 verbose url resolved https://registry.npmjs.org/redit
+29 verbose request where is https://registry.npmjs.org/redit
+30 info trying registry request attempt 1 at 23:25:55
+31 http GET https://registry.npmjs.org/redit
+32 http 404 https://registry.npmjs.org/redit
+33 verbose headers { date: 'Sat, 06 Dec 2014 22:25:56 GMT',
+33 verbose headers   server: 'CouchDB/1.5.0 (Erlang OTP/R14B04)',
+33 verbose headers   'content-type': 'application/json',
+33 verbose headers   'cache-control': 'max-age=0',
+33 verbose headers   'content-length': '52',
+33 verbose headers   'accept-ranges': 'bytes',
+33 verbose headers   via: '1.1 varnish',
+33 verbose headers   age: '0',
+33 verbose headers   'x-served-by': 'cache-jfk1032-JFK',
+33 verbose headers   'x-cache': 'MISS',
+33 verbose headers   'x-cache-hits': '0',
+33 verbose headers   'x-timer': 'S1417904756.647971,VS0,VE85',
+33 verbose headers   'keep-alive': 'timeout=10, max=50',
+33 verbose headers   connection: 'Keep-Alive' }
+34 silly registry.get cb [ 404,
+34 silly registry.get   { date: 'Sat, 06 Dec 2014 22:25:56 GMT',
+34 silly registry.get     server: 'CouchDB/1.5.0 (Erlang OTP/R14B04)',
+34 silly registry.get     'content-type': 'application/json',
+34 silly registry.get     'cache-control': 'max-age=0',
+34 silly registry.get     'content-length': '52',
+34 silly registry.get     'accept-ranges': 'bytes',
+34 silly registry.get     via: '1.1 varnish',
+34 silly registry.get     age: '0',
+34 silly registry.get     'x-served-by': 'cache-jfk1032-JFK',
+34 silly registry.get     'x-cache': 'MISS',
+34 silly registry.get     'x-cache-hits': '0',
+34 silly registry.get     'x-timer': 'S1417904756.647971,VS0,VE85',
+34 silly registry.get     'keep-alive': 'timeout=10, max=50',
+34 silly registry.get     connection: 'Keep-Alive' } ]
+35 silly lockFile 393e89f8-redit redit@*
+36 silly lockFile 393e89f8-redit redit@*
+37 error 404 404 Not Found: redit
+37 error 404
+37 error 404 'redit' is not in the npm registry.
+37 error 404 You should bug the author to publish it
+37 error 404 It was specified as a dependency of 'bitcoin.faucet.api'
+37 error 404
+37 error 404 Note that you can also install from a
+37 error 404 tarball, folder, or http url, or git url.
+38 error System Linux 3.13.0-24-generic
+39 error command "/usr/local/bin/node" "/usr/local/bin/npm" "install"
+40 error cwd /home/joe/faucet
+41 error node -v v0.10.32
+42 error npm -v 1.4.28
+43 error code E404
+44 verbose exit [ 1, true ]

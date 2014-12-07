@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "express": "*",
-    "body-parser": "*"
+    "body-parser": "*",
+    "redis": "*"
   }
 }
