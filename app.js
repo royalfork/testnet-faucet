@@ -3,36 +3,59 @@ var bodyParser = require("body-parser");
 var http = require("http");
 var redis = require("redis");
 var Promise = require("promise");
+var bitcoin = require("bitcoin");
 
-var client = redis.createClient();
-
-client.on("error", function(err) {
-  console.log("Error: " + err);
-});
-
+// set constants
 var port = 3000;
 var wait_time = 10 * 60; // time in seconds until app refreshes ip limits
 
+// config redis
+var redis_c = redis.createClient();
+redis_c.on("error", function(err) {
+  console.log("Error: " + err);
+});
+
+// config bitcoin
+var bitc_c = new bitcoin.Client({
+  host: 'localhost',
+  port: 8833, // XXX this is nonstandard....and is the tunneled port I am using for dev
+  user: 'bitcoinrpc',
+  pass: 'testing',
+  timeout: 30000
+});
+
+// config app
 var app = express();
 app.set('port', port);
-
 app.use(bodyParser.json()); // supports JSON encoded bodies
 app.use(bodyParser.urlencoded({ // supports URL-encoded bodies
   extended: true
 }));
 
+// app will only respond with JSON
 app.use(function(req, res, next) {
   res.header('Content-Type', 'application/json');
   next();
 });
 
+// 2% of current balance
 function getMaxWithdrawal () {
-  return 1300;
+  var PERCENTAGE_OF_BAL = .02;
+  var promise = new Promise(function(resolve, reject) {
+    bitc_c.getBalance('*', 1, function(err, balance, resHeaders) {
+      if (err) {
+        reject(err);
+      }
+      resolve(Math.floor(balance * Math.pow(10, 8) * PERCENTAGE_OF_BAL));
+    });
+  })
+  return promise;
 }
 
+// returns limit for IP from redis
 function getSavedLimit (ip) {
   var promise = new Promise(function(resolve, reject) {
-    client.get(ip, function(err, result) {
+    redis_c.get(ip, function(err, result) {
       // we could connect to redis and make the query
       if (!err) {
         // this IP has visited before, return previously computed limits
@@ -49,6 +72,12 @@ function getSavedLimit (ip) {
   return promise;
 }
 
+app.get('/balance', function(req, res) {
+  getMaxWithdrawal().then(function(bal) {
+    return res.end(JSON.stringify(bal));
+  });
+});
+
 app.get('/limit', function(req, res) {
   getSavedLimit(req.ip).then(function(limit) {
     var resp = {
@@ -57,12 +86,15 @@ app.get('/limit', function(req, res) {
     }
     // if limit returns -1, we need to set the limit
     if (limit < 0) {
-      var max = getMaxWithdrawal();
-      client.set(req.ip, max);
-      client.expire(req.ip, wait_time);
-      resp.max = max;
+      getMaxWithdrawal().then(function(max) {
+        redis_c.set(req.ip, max);
+        redis_c.expire(req.ip, wait_time);
+        resp.max = max;
+        return res.end(JSON.stringify(resp));
+      });
+    } else {
+      return res.end(JSON.stringify(resp));
     }
-    return res.end(JSON.stringify(resp));
   });
 });
 
