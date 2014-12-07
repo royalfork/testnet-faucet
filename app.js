@@ -7,7 +7,7 @@ var bitcoin = require("bitcoin");
 
 // set constants
 var port = 3000;
-var wait_time = 10 * 60; // time in seconds until app refreshes ip limits
+var wait_time = 60 * 60; // time in seconds until app refreshes ip limits
 
 // config redis
 var redis_c = redis.createClient();
@@ -16,7 +16,7 @@ redis_c.on("error", function(err) {
 });
 
 // config bitcoin
-var bitc_c = new bitcoin.Client({
+var btc_c = new bitcoin.Client({
   host: 'localhost',
   port: 8833, // XXX this is nonstandard....and is the tunneled port I am using for dev
   user: 'bitcoinrpc',
@@ -42,11 +42,11 @@ app.use(function(req, res, next) {
 function getMaxWithdrawal () {
   var PERCENTAGE_OF_BAL = .02;
   var promise = new Promise(function(resolve, reject) {
-    bitc_c.getBalance('*', 1, function(err, balance, resHeaders) {
+    btc_c.getBalance('*', 1, function(err, balance, resHeaders) {
       if (err) {
         reject(err);
       }
-      resolve(Math.floor(balance * Math.pow(10, 8) * PERCENTAGE_OF_BAL));
+      resolve(Math.floor(btc2sat(balance) * PERCENTAGE_OF_BAL));
     });
   })
   return promise;
@@ -72,11 +72,13 @@ function getSavedLimit (ip) {
   return promise;
 }
 
-app.get('/balance', function(req, res) {
-  getMaxWithdrawal().then(function(bal) {
-    return res.end(JSON.stringify(bal));
-  });
-});
+function sat2btc (sat) {
+  return sat * Math.pow(10, -8);
+}
+
+function btc2sat (btc) {
+  return btc * Math.pow(10, 8); 
+}
 
 app.get('/limit', function(req, res) {
   getSavedLimit(req.ip).then(function(limit) {
@@ -99,7 +101,7 @@ app.get('/limit', function(req, res) {
 });
 
 app.post('/', function(req, res) {
-  var addr = req.body.addr;
+  var addr = req.body.address;
   var sat = req.body.amount;
 
   // check IP limits
@@ -107,7 +109,29 @@ app.post('/', function(req, res) {
     console.log("limit: " + resp + ", ask: " + sat);
     if (resp > sat) {
       // make transaction
-      return res.end("WE GOOD");
+      btc_c.cmd("sendtoaddress", addr, sat2btc(sat), function(err, txid, headers) {
+        if (err) {
+          return res.end(JSON.stringify({
+            code: err.code,
+            message: err.message
+          }));
+        }
+
+        // we have successfully made a txn
+        // update limit, and send new limit and txid 
+        redis_c.decrby(req.ip, sat, function(err, result) {
+          if (err) {
+            return res.end(JSON.stringify({
+              error: "Internal Error"
+            }));
+          }
+          return res.end(JSON.stringify({
+            id: txid,
+            limit: result
+          }));
+        });
+
+      });
     } else {
       return res.end(JSON.stringify({
         error: "Request exceeds limit",
