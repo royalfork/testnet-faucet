@@ -2,6 +2,7 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var http = require("http");
 var redis = require("redis");
+var Promise = require("promise");
 
 var client = redis.createClient();
 
@@ -29,55 +30,61 @@ function getMaxWithdrawal () {
   return 1300;
 }
 
-app.get('/limit', function(req, res) {
-  client.get(req.ip, function(err, result) {
-    // we could connect to redis and make the query
-    if (!err) {
-      // this IP has visited before, return previously computed limits
-      if (result) {
-        var resp = {
-          max: result,
-          ip: req.ip
-        };
-        return res.end(JSON.stringify(resp));
-      } else { 
-        // first time IP has visited
-        // compute current limit, respond with default wait time
-        var max = getMaxWithdrawal();
-        client.set(req.ip, max);
-        client.expire(req.ip, wait_time);
-
-        var resp = {
-          max: max, 
-          ip: req.ip
-        };
-        return res.end(JSON.stringify(resp));
+function getSavedLimit (ip) {
+  var promise = new Promise(function(resolve, reject) {
+    client.get(ip, function(err, result) {
+      // we could connect to redis and make the query
+      if (!err) {
+        // this IP has visited before, return previously computed limits
+        if (result) {
+          resolve(result);
+        } else { 
+          resolve(-1);
+        }
+      } else {
+        reject(err);
       }
+    });
+  });
+  return promise;
+}
+
+app.get('/limit', function(req, res) {
+  getSavedLimit(req.ip).then(function(limit) {
+    var resp = {
+      ip: req.ip, 
+      max: limit
     }
-    return res.end(JSON.stringify({error: "There was an internal error"}));
+    // if limit returns -1, we need to set the limit
+    if (limit < 0) {
+      var max = getMaxWithdrawal();
+      client.set(req.ip, max);
+      client.expire(req.ip, wait_time);
+      resp.max = max;
+    }
+    return res.end(JSON.stringify(resp));
   });
 });
 
-app.get('/', function(req, res) {
-  // get redis val for ip 
-  console.log(req.ip);
-  client.get(req.ip, function(err, result) {
-    if (!err) {
-      if (result) {
-        return res.end(result);
-      }
-      client.set(req.ip, 1000);
-      return res.end("no entry for your ip");
-    }
-    console.log("Error: " + JSON.stringify(err));
-    return res.end("WE HAVE ERROR");
-  })
-});
+app.post('/', function(req, res) {
+  var addr = req.body.addr;
+  var sat = req.body.amount;
 
-app.post('/msg', function(req, res) {
-  var message = req.body;
-  var msg = JSON.stringify(message);
-  console.log(msg);
+  // check IP limits
+  getSavedLimit(req.ip).then(function(resp) {
+    console.log("limit: " + resp + ", ask: " + sat);
+    if (resp > sat) {
+      // make transaction
+      return res.end("WE GOOD");
+    } else {
+      return res.end(JSON.stringify({
+        error: "Request exceeds limit",
+        limit: resp,
+        request: sat,
+        ip: req.ip
+      }));
+    }
+  })
 });
 
 http.createServer(app).listen(app.get('port'), function() {
