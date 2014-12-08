@@ -76,16 +76,18 @@ function getSavedLimit (ip) {
 }
 
 app.get('/limit', function(req, res) {
-  getSavedLimit(req.ip).then(function(limit) {
+  // prefernce goes to x-forwarded-for in case behind proxy
+  var ip = req.headers['x-forwarded-for'] || req.ip;
+  getSavedLimit(ip).then(function(limit) {
     var resp = {
-      ip: req.ip, 
+      ip: ip, 
       max: limit
     }
     // if limit returns -1, we need to set the limit
     if (limit < 0) {
       getMaxWithdrawal().then(function(max) {
-        redis_c.set(req.ip, max);
-        redis_c.expire(req.ip, wait_time);
+        redis_c.set(ip, max);
+        redis_c.expire(ip, wait_time);
         resp.max = max;
         return res.end(JSON.stringify(resp));
       });
@@ -98,9 +100,10 @@ app.get('/limit', function(req, res) {
 app.post('/', function(req, res) {
   var addr = req.body.address;
   var sat = parseInt(req.body.amount);
+  var ip = req.headers['x-forwarded-for'] || req.ip;
 
   // check IP limits
-  getSavedLimit(req.ip).then(function(resp) {
+  getSavedLimit(ip).then(function(resp) {
     console.log("limit: " + resp + ", ask: " + sat);
     if (resp > sat) {
       // make transaction
@@ -115,7 +118,7 @@ app.post('/', function(req, res) {
 
         // we have successfully made a txn
         // update limit, and send new limit and txid 
-        redis_c.decrby(req.ip, sat, function(err, result) {
+        redis_c.decrby(ip, sat, function(err, result) {
           if (err) {
             return res.end(JSON.stringify({
               error: "Internal Error"
@@ -133,7 +136,7 @@ app.post('/', function(req, res) {
         error: "Request exceeds limit",
         limit: resp,
         request: sat,
-        ip: req.ip
+        ip: ip
       }));
     }
   })
