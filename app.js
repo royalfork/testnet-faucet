@@ -6,6 +6,8 @@ var Promise = require("promise");
 var bitcoin = require("bitcoin");
 var btcmath = require("bitcoin-math");
 
+var config = require("./config");
+
 // set constants
 var port = 3000;
 var wait_time = 60 * 60; // time in seconds until app refreshes ip limits
@@ -19,9 +21,9 @@ redis_c.on("error", function(err) {
 // config bitcoin
 var btc_c = new bitcoin.Client({
   host: 'localhost',
-  port: 8833, // XXX this is nonstandard....and is the tunneled port I am using for dev
-  user: 'bitcoinrpc',
-  pass: 'testing',
+  port: config.bitcoind.port,
+  user: config.bitcoind.username,
+  pass: config.bitcoind.password,
   timeout: 30000
 });
 
