@@ -9,8 +9,8 @@ var btcmath = require("bitcoin-math");
 var config = require("./config");
 
 // set constants
-var port = 3000;
-var wait_time = 60 * 60; // time in seconds until app refreshes ip limits
+var port = config.port;
+var wait_time = config.wait_time; // time in seconds until app refreshes ip limits
 
 // config redis
 var redis_c = redis.createClient();
@@ -109,7 +109,7 @@ app.post('/', function(req, res) {
         if (err) {
           return res.end(JSON.stringify({
             code: err.code,
-            message: err.message
+            error: err.message
           }));
         }
 
