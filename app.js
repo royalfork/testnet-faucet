@@ -77,20 +77,20 @@ function getSavedLimit (ip) {
   return promise;
 }
 
-app.get('/limit', function(req, res) {
+app.get('/', function(req, res) {
   // prefernce goes to x-forwarded-for in case behind proxy
   var ip = req.headers['x-forwarded-for'] || req.ip;
   getSavedLimit(ip).then(function(limit) {
     var resp = {
       ip: ip, 
-      max: limit
+      limig: limit
     }
     // if limit returns -1, we need to set the limit
     if (limit < 0) {
       getMaxWithdrawal().then(function(max) {
         redis_c.set(ip, max);
         redis_c.expire(ip, wait_time);
-        resp.max = max;
+        resp.limit = max;
         return res.end(JSON.stringify(resp));
       });
     } else {
