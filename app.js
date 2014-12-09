@@ -1,4 +1,5 @@
 var express = require("express");
+var cors = require("cors");
 var bodyParser = require("body-parser");
 var http = require("http");
 var redis = require("redis");
@@ -30,6 +31,7 @@ var btc_c = new bitcoin.Client({
 // config app
 var app = express();
 app.set('port', port);
+app.use(cors());
 app.use(bodyParser.json()); // supports JSON encoded bodies
 app.use(bodyParser.urlencoded({ // supports URL-encoded bodies
   extended: true

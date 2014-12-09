@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "express": "*",
+    "cors": "*",
     "body-parser": "*",
     "redis": "*",
     "promise": "*",
