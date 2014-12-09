@@ -102,16 +102,21 @@ app.get('/', function(req, res) {
 app.post('/', function(req, res) {
   var addr = req.body.address;
   var sat = parseInt(req.body.amount);
+  if (!addr || !sat) {
+    res.statusCode = 406;
+    return res.end(JSON.stringify({
+      error: "Missing required parameters"
+    }));
+  }
   var ip = req.headers['x-forwarded-for'] || req.ip;
 
   // check IP limits
   getSavedLimit(ip).then(function(resp) {
-    console.log("limit: " + resp + ", ask: " + sat);
     if (resp > sat) {
       // make transaction
       btc_c.cmd("sendtoaddress", addr, sat.toBitcoin(), function(err, txid, headers) {
-        console.log(txid);
         if (err) {
+          res.statusCode = 422;
           return res.end(JSON.stringify({
             code: err.code,
             error: err.message
@@ -122,6 +127,8 @@ app.post('/', function(req, res) {
         // update limit, and send new limit and txid 
         redis_c.decrby(ip, sat, function(err, result) {
           if (err) {
+            // this should never happen
+            res.statusCode = 400;
             return res.end(JSON.stringify({
               error: "Internal Error"
             }));
@@ -134,6 +141,7 @@ app.post('/', function(req, res) {
 
       });
     } else {
+      res.statusCode = 403;
       return res.end(JSON.stringify({
         error: "Request exceeds limit",
         limit: resp,
