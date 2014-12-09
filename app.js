@@ -83,7 +83,7 @@ app.get('/', function(req, res) {
   getSavedLimit(ip).then(function(limit) {
     var resp = {
       ip: ip, 
-      limig: limit
+      limit: limit
     }
     // if limit returns -1, we need to set the limit
     if (limit < 0) {
