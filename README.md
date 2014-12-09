@@ -18,7 +18,7 @@ POST /
   or:
   {error: "ERROR MESSAGE" }
 
-GET /limit
+GET /
   Responds with:
   {ip: "YOUR IP", limit: "MAX WITHDRAWAL IN SATOSHIS"}
 
