@@ -104,6 +104,7 @@ app.post('/', function(req, res) {
   var sat = parseInt(req.body.amount);
   if (!addr || !sat) {
     res.statusCode = 406;
+    console.log(ip + ": ERROR missing params");
     return res.end(JSON.stringify({
       error: "Missing required parameters"
     }));
@@ -117,6 +118,7 @@ app.post('/', function(req, res) {
       btc_c.cmd("sendtoaddress", addr, sat.toBitcoin(), function(err, txid, headers) {
         if (err) {
           res.statusCode = 422;
+          console.log(ip + ": ERROR " + err.message);
           return res.end(JSON.stringify({
             code: err.code,
             error: err.message
@@ -128,11 +130,15 @@ app.post('/', function(req, res) {
         redis_c.decrby(ip, sat, function(err, result) {
           if (err) {
             // this should never happen
+            console.log(ip + ": INTERNAL ERROR");
             res.statusCode = 400;
             return res.end(JSON.stringify({
               error: "Internal Error"
             }));
           }
+
+          console.log(ip + ": " + sat.toBitcoin() + " in txid " + txid);
+
           return res.end(JSON.stringify({
             id: txid,
             limit: result
@@ -142,6 +148,7 @@ app.post('/', function(req, res) {
       });
     } else {
       res.statusCode = 403;
+      console.log(ip + ": ERROR request exceeds lim. " + sat + " > " + resp);
       return res.end(JSON.stringify({
         error: "Request exceeds limit",
         limit: resp,
