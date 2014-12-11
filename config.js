@@ -3,7 +3,7 @@ var config = {
   wait_time: 60 * 60,
   bitcoind: {
     username: "bitcoinrpc",
-    password: "testing",
+    password: "satoshi_naka_3939",
     port: 8833
   }
 }

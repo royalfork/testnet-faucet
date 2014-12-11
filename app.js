@@ -67,7 +67,14 @@ function getSavedLimit (ip) {
         if (result) {
           resolve(result);
         } else { 
-          resolve(-1);
+          // set the limit and return it
+          getMaxWithdrawal().then(function(max) {
+            redis_c.set(ip, max);
+            redis_c.expire(ip, wait_time);
+            resolve(max);
+          }, function(err) {
+            reject(err);
+          });
         }
       } else {
         reject(err);
@@ -86,16 +93,7 @@ app.get('/', function(req, res) {
       limit: limit
     }
     // if limit returns -1, we need to set the limit
-    if (limit < 0) {
-      getMaxWithdrawal().then(function(max) {
-        redis_c.set(ip, max);
-        redis_c.expire(ip, wait_time);
-        resp.limit = max;
-        return res.end(JSON.stringify(resp));
-      });
-    } else {
-      return res.end(JSON.stringify(resp));
-    }
+    return res.end(JSON.stringify(resp));
   });
 });
 
@@ -139,10 +137,21 @@ app.post('/', function(req, res) {
 
           console.log(ip + ": " + sat.toBitcoin() + " in txid " + txid);
 
-          return res.end(JSON.stringify({
-            id: txid,
-            limit: result
-          }));
+          if (req.body.verbose) {
+            btc_c.cmd("getrawtransaction", txid, 1, function(error, txn) {
+              return res.end(JSON.stringify({
+                id: txid,
+                limit: result,
+                txn: txn
+              }));
+            });
+          } else {
+            return res.end(JSON.stringify({
+              id: txid,
+              limit: result
+            }));
+          }
+
         });
 
       });
