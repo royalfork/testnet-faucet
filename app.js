@@ -100,6 +100,8 @@ app.get('/', function(req, res) {
 app.post('/', function(req, res) {
   var addr = req.body.address;
   var sat = parseInt(req.body.amount);
+  var ip = req.headers['x-forwarded-for'] || req.ip;
+
   if (!addr || !sat) {
     res.statusCode = 406;
     console.log(ip + ": ERROR missing params");
@@ -107,7 +109,6 @@ app.post('/', function(req, res) {
       error: "Missing required parameters"
     }));
   }
-  var ip = req.headers['x-forwarded-for'] || req.ip;
 
   // check IP limits
   getSavedLimit(ip).then(function(resp) {
@@ -166,6 +167,24 @@ app.post('/', function(req, res) {
       }));
     }
   })
+});
+
+// relays raw transaction
+app.post('/sendraw', function(req, res) {
+  var hex = req.body.hex;
+  btc_c.cmd("sendrawtransaction", hex, function(err, txid, headers) {
+    if (err) {
+      res.statusCode = 422;
+      console.log(ip + ": ERROR " + err.message);
+      return res.end(JSON.stringify({
+        code: err.code,
+        error: err.message
+      }));
+    }
+    return res.end(JSON.stringify({
+      id: txid
+    }));
+  });
 });
 
 http.createServer(app).listen(app.get('port'), function() {
